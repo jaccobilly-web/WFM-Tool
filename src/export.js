@@ -360,22 +360,17 @@ export async function exportToExcel(categories, modelName, modelDescription, num
   function buildResultsSheet(zTC, zOptStart) {
     const ws = wb.addWorksheet("Results", { properties: { tabColor: { argb: "FF059669" } } });
 
-    // Title
     ws.mergeCells("A1:D1");
     sc(ws, 1, 1, name, { font: { name: "Arial", size: 18, bold: true, color: { argb: "FF1a1a2e" } }, align: { horizontal: "left", vertical: "middle" } });
 
-    // Description
     let nextRow = 2;
     if (desc) {
       ws.mergeCells("A2:D2");
       sc(ws, 2, 1, desc, { font: { name: "Arial", size: 11, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "middle" } });
       nextRow = 3;
     }
-
-    // Spacer
     nextRow++;
 
-    // Table header
     const hdrRow = nextRow;
     sc(ws, hdrRow, 1, "Rank", { font: { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } }, fill: "1a1a2e" });
     sc(ws, hdrRow, 2, "Option", { font: { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } }, fill: "1a1a2e", align: { horizontal: "left", vertical: "middle" } });
@@ -385,39 +380,38 @@ export async function exportToExcel(categories, modelName, modelDescription, num
     ws.getColumn(2).width = 30;
     ws.getColumn(3).width = 14;
 
-    // One row per option, referencing z-score sheet
-    const zSheetName = "'Z-Score Normalisation'";
-    const zTL = colLetter(zTC);
-    const zRankRange = zSheetName + "!" + colLetter(zTC + 1) + "$" + zOptStart + ":" + colLetter(zTC + 1) + "$" + (zOptStart + numOptions - 1);
-    const zTotalRange = zSheetName + "!" + zTL + "$" + zOptStart + ":" + zTL + "$" + (zOptStart + numOptions - 1);
+    // Auto-sorted by rank using INDEX/MATCH
+    // Z-Score sheet: col A = option name, col B = total score, col C = rank
+    const zS = "'Z-Score Normalisation'";
+    const zOptEnd = zOptStart + numOptions - 1;
+    const rankRange = zS + "!$C$" + zOptStart + ":$C$" + zOptEnd;
+    const nameRange = zS + "!$A$" + zOptStart + ":$A$" + zOptEnd;
+    const scoreRange = zS + "!$" + colLetter(zTC) + "$" + zOptStart + ":$" + colLetter(zTC) + "$" + zOptEnd;
 
     const dataStart = hdrRow + 1;
-    for (let opt = 0; opt < numOptions; opt++) {
-      const r = dataStart + opt;
-      const zRow = zOptStart + opt;
+    for (let i = 0; i < numOptions; i++) {
+      const r = dataStart + i;
+      const rank = i + 1;
 
-      // Rank (from z-score sheet col C = rank)
-      sc(ws, r, 1, { formula: zSheetName + "!C" + zRow }, { font: { name: "Arial", size: 12, bold: true, color: { argb: "FF1a1a2e" } }, fmt: "0" });
+      // Rank: just the number 1, 2, 3...
+      sc(ws, r, 1, rank, { font: { name: "Arial", size: 12, bold: true, color: { argb: "FF1a1a2e" } }, fmt: "0" });
 
-      // Option name (from z-score sheet col A)
-      sc(ws, r, 2, { formula: zSheetName + "!A" + zRow }, { font: { name: "Arial", size: 11, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "middle" } });
+      // Option name: INDEX(names, MATCH(rank, ranks, 0))
+      sc(ws, r, 2, { formula: "IFERROR(INDEX(" + nameRange + ",MATCH(" + rank + "," + rankRange + ",0)),\"\")" }, { font: { name: "Arial", size: 11, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "middle" } });
 
-      // Total score (from z-score sheet col B = total)
-      sc(ws, r, 3, { formula: zSheetName + "!" + zTL + zRow }, { font: { name: "Arial", size: 11, bold: true, color: { argb: "FF1a1a2e" } }, fmt: "0.00" });
+      // Score: INDEX(scores, MATCH(rank, ranks, 0))
+      sc(ws, r, 3, { formula: "IFERROR(INDEX(" + scoreRange + ",MATCH(" + rank + "," + rankRange + ",0)),\"\")" }, { font: { name: "Arial", size: 11, bold: true, color: { argb: "FF1a1a2e" } }, fmt: "0.00" });
     }
 
-    // Conditional formatting on score column
     const scoreRef = "C" + dataStart + ":C" + (dataStart + numOptions - 1);
     ws.addConditionalFormatting({ ref: scoreRef, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFFECACA" }, { argb: "FFFFFBEB" }, { argb: "FFBBF7D0" }], priority: 1 }] });
 
-    // Conditional formatting on rank column
     const rankRef2 = "A" + dataStart + ":A" + (dataStart + numOptions - 1);
     ws.addConditionalFormatting({ ref: rankRef2, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFBBF7D0" }, { argb: "FFFFFBEB" }, { argb: "FFFECACA" }], priority: 2 }] });
 
-    // Note at bottom
     const noteRow = dataStart + numOptions + 1;
     ws.mergeCells("A" + noteRow + ":C" + noteRow);
-    sc(ws, noteRow, 1, "Scores are based on z-score normalised data from the Z-Score Normalisation tab. Options are not auto-sorted; rank column indicates position.", { font: { name: "Arial", size: 8, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
+    sc(ws, noteRow, 1, "Ranked by z-score normalised weighted total from the Z-Score Normalisation tab.", { font: { name: "Arial", size: 8, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
   }
 
   // ============ DEFINITIONS SHEET ============
@@ -434,12 +428,13 @@ export async function exportToExcel(categories, modelName, modelDescription, num
     sc(ws, instrRow, 1, "Definitions for each criterion used in the model. Edit as needed.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
 
     const hdrRow = instrRow + 1;
-    const headers = ["Category", "Criterion", "Definition"];
+    const headers = ["Category", "Criterion", "Definition", "Source"];
     headers.forEach((h, i) => sc(ws, hdrRow, i + 1, h, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "64748b" }));
 
     ws.getColumn(1).width = 22;
     ws.getColumn(2).width = 26;
-    ws.getColumn(3).width = 60;
+    ws.getColumn(3).width = 50;
+    ws.getColumn(4).width = 30;
 
     let dr = hdrRow + 1;
     processed.forEach((cat, ci) => {
@@ -453,6 +448,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
           }
           sc(ws, dr, 2, crit.name, { font: { name: "Arial", size: 10, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "top" } });
           sc(ws, dr, 3, crit.description || "", { font: { name: "Arial", size: 10, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "top", wrapText: true } });
+          sc(ws, dr, 4, "", { font: { name: "Arial", size: 10, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "top", wrapText: true } });
           dr++;
         });
         if (cat.criteria.length > 1) {
@@ -462,6 +458,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
         sc(ws, dr, 1, cat.name, { font: { name: "Arial", size: 10, bold: true, color: { argb: "FF1a1a2e" } }, fill: "f1f5f9", align: { horizontal: "left", vertical: "top" } });
         sc(ws, dr, 2, cat.name, { font: { name: "Arial", size: 10, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "top" } });
         sc(ws, dr, 3, (cat.criteria[0] && cat.criteria[0].description) || "", { font: { name: "Arial", size: 10, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "top", wrapText: true } });
+        sc(ws, dr, 4, "", { font: { name: "Arial", size: 10, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "top", wrapText: true } });
         dr++;
       }
     });
