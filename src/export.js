@@ -27,7 +27,7 @@ function colLetter(colIdx) {
   return result;
 }
 
-export async function exportToExcel(categories, modelName, numOptions, optionNames) {
+export async function exportToExcel(categories, modelName, modelDescription, numOptions, optionNames) {
   const wb = new ExcelJS.Workbook();
 
   // Determine which categories have subcriteria vs standalone
@@ -42,7 +42,10 @@ export async function exportToExcel(categories, modelName, numOptions, optionNam
 
   wsW.mergeCells("A1:F1");
   sc(wsW, 1, 1, "Weight Structure", { font: { name: "Arial", size: 14, bold: true, color: { argb: "FF1a1a2e" } }, align: { horizontal: "left", vertical: "middle" } });
-  sc(wsW, 2, 1, "Edit weights here (blue cells). All other sheets reference this tab.", { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle" } });
+  sc(wsW, 2, 1, modelDescription || "Edit weights here (blue cells). All other sheets reference this tab.", { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle", wrapText: true } });
+  if (modelDescription) {
+    sc(wsW, 3, 1, "Edit weights here (blue cells). All other sheets reference this tab.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
+  }
 
   const wHeaders = ["Category", "Category Weight", "Criterion", "Criterion Weight", "Effective Weight", "Check"];
   wHeaders.forEach((h, i) => sc(wsW, 4, i + 1, h, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "10b981" }));
@@ -113,7 +116,12 @@ export async function exportToExcel(categories, modelName, numOptions, optionNam
 
     ws.mergeCells("A1:D1");
     sc(ws, 1, 1, (modelName || "Weighted Factor Model") + " - " + (isZscore ? "Z-Score Normalised" : "Data Input"), { font: { name: "Arial", size: 14, bold: true, color: { argb: "FF1a1a2e" } }, align: { horizontal: "left", vertical: "middle" } });
-    sc(ws, 2, 1, isZscore ? "Scores standardised per criterion (mean=0, std=1), then weighted" : "Enter data in the blue cells. Weights are pulled from the Weights tab.", { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle" } });
+    if (modelDescription) {
+      sc(ws, 2, 1, modelDescription, { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle", wrapText: true } });
+      sc(ws, 3, 1, isZscore ? "Scores standardised per criterion (mean=0, std=1), then weighted" : "Enter data in the blue cells. Weights are pulled from the Weights tab.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
+    } else {
+      sc(ws, 2, 1, isZscore ? "Scores standardised per criterion (mean=0, std=1), then weighted" : "Enter data in the blue cells. Weights are pulled from the Weights tab.", { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle" } });
+    }
 
     var OC = 1, TC = 2, RC = 3, DC = 4;
     var R_CAT = 4, R_CW = 5, R_CRIT = 6, R_CW2 = 7, R_EW = 8, R_HDR = 9, R_OPT = 10;
