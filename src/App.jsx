@@ -313,15 +313,16 @@ export default function App() {
     <div style={{ minHeight: "100vh" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "32px 16px" }}>
         {/* Title */}
-        <div className="mb-2">
-          <label className="text-xs text-slate-500 mb-1 block">Model name (used as filename)</label>
+        <div className="mb-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Model name</label>
           <input type="text" value={modelName} onChange={e => setModelName(e.target.value)}
             placeholder="e.g. Career Options Analysis"
-            className="text-2xl font-bold text-slate-800 bg-transparent border-0 border-b-2 border-transparent hover:border-slate-300 focus:border-slate-500 focus:outline-none px-0 py-1 w-full transition-colors" />
+            className="text-2xl font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200 transition-colors" />
+          <label className="text-xs font-medium text-slate-500 mt-4 mb-1.5 block">Purpose of this model</label>
           <textarea value={modelDescription} onChange={e => setModelDescription(e.target.value)}
-            placeholder="What is this model for? (e.g. 'Designed to identify which is the best next step for me in my career')"
+            placeholder="e.g. Designed to identify which is the best next step for me in my career"
             rows={2}
-            className="w-full text-sm text-slate-500 bg-transparent border-0 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none px-0 py-1 mt-1 transition-colors resize-none" />
+            className="w-full text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200 transition-colors resize-none" />
         </div>
 
         <div className="mb-8 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-sm text-slate-600 space-y-2">
