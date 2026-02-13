@@ -99,7 +99,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
     for (let row = s; row <= e; row++) {
       sc(wsW, row, 5, { formula: "IFERROR(" + cwRef + "*(D" + row + "/SUM(" + critRange + ")),0)" }, { font: { name: "Arial", size: 10, bold: true }, fmt: "0.0%" });
     }
-    sc(wsW, s, 6, { formula: 'IF(SUM(' + critRange + ')=0,"Empty",IF(ABS(SUM(' + critRange + ')-1)<0.001,"OK","Sum: "&TEXT(SUM(' + critRange + '),"0%")))' }, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF16a34a" } }, fill: "fefce8" });
+    sc(wsW, s, 6, { formula: 'IF(SUM(' + critRange + ')=0,"Empty",IF(ABS(SUM(' + critRange + ')-1)<0.001,"OK","Sum: "&TEXT(SUM(' + critRange + '),"0%")))' }, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFdc2626" } }, fill: "fefce8" });
     for (let row = s + 1; row <= e; row++) sc(wsW, row, 6, "", { fill: "fefce8" });
   });
 
@@ -109,7 +109,38 @@ export async function exportToExcel(categories, modelName, modelDescription, num
   sc(wsW, wr, 2, { formula: catSumParts }, { font: { name: "Arial", size: 10, bold: true }, fill: "e2e8f0", fmt: "0%" });
   sc(wsW, wr, 3, "", { fill: "e2e8f0" }); sc(wsW, wr, 4, "", { fill: "e2e8f0" });
   sc(wsW, wr, 5, { formula: "SUM(E" + firstDataRow + ":E" + (wr - 2) + ")" }, { font: { name: "Arial", size: 10, bold: true }, fill: "e2e8f0", fmt: "0.0%" });
-  sc(wsW, wr, 6, { formula: 'IF(ABS(' + catSumParts + '-1)<0.001,"All weights balanced","Category weights sum to "&TEXT(' + catSumParts + ',"0%")&" (need 100%)")' }, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF16a34a" } }, fill: "fefce8" });
+  sc(wsW, wr, 6, { formula: 'IF(ABS(' + catSumParts + '-1)<0.001,"All weights balanced","Category weights sum to "&TEXT(' + catSumParts + ',"0%")&" (need 100%)")' }, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFdc2626" } }, fill: "fefce8" });
+
+  // Conditional formatting: green font + green bg when OK/balanced, red bg when not
+  const checkRange = "F" + firstDataRow + ":F" + wr;
+  wsW.addConditionalFormatting({
+    ref: checkRange,
+    rules: [{
+      type: "containsText",
+      operator: "containsText",
+      text: "OK",
+      style: { font: { color: { argb: "FF16a34a" } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFdcfce7" } } },
+      priority: 1,
+    }, {
+      type: "containsText",
+      operator: "containsText",
+      text: "balanced",
+      style: { font: { color: { argb: "FF16a34a" } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFdcfce7" } } },
+      priority: 2,
+    }, {
+      type: "containsText",
+      operator: "containsText",
+      text: "Sum:",
+      style: { font: { color: { argb: "FFdc2626" } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFfee2e2" } } },
+      priority: 3,
+    }, {
+      type: "containsText",
+      operator: "containsText",
+      text: "need",
+      style: { font: { color: { argb: "FFdc2626" } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFfee2e2" } } },
+      priority: 4,
+    }],
+  });
 
   // ============ SHARED CONSTANTS ============
   // Input tab has no total/rank; Z-Score tab has them
