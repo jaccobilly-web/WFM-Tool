@@ -254,10 +254,20 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       });
     }
 
+    // Conditional formatting: per-column color scale on data cells (red-yellow-green)
+    catColInfo.forEach(({ critStart, ci }) => {
+      const cat = processed[ci];
+      const numCrit = cat.hasSub ? cat.criteria.length : 1;
+      for (let j = 0; j < numCrit; j++) {
+        const cc = critStart + j;
+        const cl = colLetter(cc);
+        const ref = cl + R_OPT + ":" + cl + (R_OPT + numOptions - 1);
+        ws.addConditionalFormatting({ ref, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFFECACA" }, { argb: "FFFFFBEB" }, { argb: "FFBBF7D0" }], priority: 1 }] });
+      }
+    });
+
     ws.views = [{ state: "frozen", xSplit: DC - 1, ySplit: R_OPT - 1 }];
   }
-
-  // ============ Z-SCORE NORMALISATION SHEET (with total + rank) ============
   // We need to know the Input sheet column layout for cross-refs
   function buildZScoreSheet() {
     const ws = wb.addWorksheet("Z-Score Normalisation", { properties: { tabColor: { argb: "FF8b5cf6" } } });
@@ -392,11 +402,21 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       sc(ws, r, RC, { formula: 'IFERROR(RANK(' + tl + r + ',' + rankRange + ',0),"")' }, { font: { name: "Arial", size: 10, bold: true }, fill: "e2e8f0", fmt: "0" });
     }
 
-    // Conditional formatting
+    // Conditional formatting on total and rank
     const totalRef = colLetter(TC) + R_OPT + ":" + colLetter(TC) + (R_OPT + numOptions - 1);
     ws.addConditionalFormatting({ ref: totalRef, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFFECACA" }, { argb: "FFFFFBEB" }, { argb: "FFBBF7D0" }], priority: 1 }] });
     const rankRef = colLetter(RC) + R_OPT + ":" + colLetter(RC) + (R_OPT + numOptions - 1);
     ws.addConditionalFormatting({ ref: rankRef, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFBBF7D0" }, { argb: "FFFFFBEB" }, { argb: "FFFECACA" }], priority: 2 }] });
+
+    // Conditional formatting: single color scale across ALL z-score data cells
+    const allDataCols = [];
+    zCatColInfo.forEach(({ critStart, ci }) => {
+      const cat = processed[ci];
+      const numCrit = cat.hasSub ? cat.criteria.length : 1;
+      for (let j = 0; j < numCrit; j++) allDataCols.push(critStart + j);
+    });
+    const allDataRef = allDataCols.map(cc => colLetter(cc) + R_OPT + ":" + colLetter(cc) + (R_OPT + numOptions - 1)).join(" ");
+    ws.addConditionalFormatting({ ref: allDataRef, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFFECACA" }, { argb: "FFFFFBEB" }, { argb: "FFBBF7D0" }], priority: 3 }] });
 
     ws.views = [{ state: "frozen", xSplit: DC - 1, ySplit: R_OPT - 1 }];
 
