@@ -314,10 +314,12 @@ export default function App() {
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "32px 16px" }}>
         {/* Title */}
         <div className="mb-2">
+          <label className="text-xs text-slate-500 mb-1 block">Model name (used as filename)</label>
           <input type="text" value={modelName} onChange={e => setModelName(e.target.value)}
+            placeholder="e.g. Career Options Analysis"
             className="text-2xl font-bold text-slate-800 bg-transparent border-0 border-b-2 border-transparent hover:border-slate-300 focus:border-slate-500 focus:outline-none px-0 py-1 w-full transition-colors" />
           <textarea value={modelDescription} onChange={e => setModelDescription(e.target.value)}
-            placeholder="Describe the purpose of this model (e.g. 'Designed to identify which is the best next step for me in my career')"
+            placeholder="What is this model for? (e.g. 'Designed to identify which is the best next step for me in my career')"
             rows={2}
             className="w-full text-sm text-slate-500 bg-transparent border-0 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none px-0 py-1 mt-1 transition-colors resize-none" />
         </div>
