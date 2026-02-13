@@ -115,7 +115,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
   // Input tab has no total/rank; Z-Score tab has them
   const R_CAT = 4, R_CW = 5, R_CRIT = 6, R_CW2 = 7, R_EW = 8, R_HDR = 9, R_OPT = 10;
 
-  // ============ INPUT SHEET (data entry only, no scores) ============
+  // ============ INPUT SHEET (data entry, category scores but no total/rank) ============
   function buildInputSheet() {
     const ws = wb.addWorksheet("Input", { properties: { tabColor: { argb: "FF3b82f6" } } });
     ws.mergeCells("A1:D1");
@@ -127,53 +127,60 @@ export async function exportToExcel(categories, modelName, modelDescription, num
     }
     sc(ws, instrRow, 1, "Enter data in the blue cells. Weights are pulled from the Weights tab.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
 
-    // No Total/Rank columns. Col A = Option, Col B onwards = data
     const OC = 1;
     const DC = 2;
 
-    // Column map
+    // Column map (with category score columns for multi-criteria categories)
     let col = DC;
     const catColInfo = [];
     processed.forEach((cat, ci) => {
       const critStart = col;
       const numCrit = cat.hasSub ? cat.criteria.length : 1;
       col += numCrit;
-      catColInfo.push({ critStart, critEnd: critStart + numCrit - 1, ci });
+      const cscoreCol = cat.hasSub ? col : null;
+      if (cat.hasSub) col++;
+      catColInfo.push({ critStart, critEnd: critStart + numCrit - 1, cscoreCol, ci });
     });
 
     // Label col
     for (let rr = R_CAT; rr <= R_EW; rr++) sc(ws, rr, OC, "", { fill: "f8fafc" });
     sc(ws, R_CAT, OC, "Category", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
     sc(ws, R_CW, OC, "Category weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
-    sc(ws, R_CRIT, OC, "Criterion", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CRIT, OC, "Criterion", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle", wrapText: true } });
     sc(ws, R_CW2, OC, "Criterion weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
     sc(ws, R_EW, OC, "Effective weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
     sc(ws, R_HDR, OC, "Option", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "1a1a2e", align: { horizontal: "left", vertical: "middle" } });
     ws.getColumn(OC).width = 20;
 
-    catColInfo.forEach(({ critStart, critEnd, ci }) => {
+    catColInfo.forEach(({ critStart, critEnd, cscoreCol, ci }) => {
       const cat = processed[ci];
       const color = CAT_COLORS[ci % CAT_COLORS.length];
       const [s_w] = catRowRanges[ci];
       const cwRef = catWeightCells[ci];
+      const mergeEnd = cscoreCol || critEnd;
 
-      if (critEnd > critStart) ws.mergeCells(R_CAT, critStart, R_CAT, critEnd);
+      if (mergeEnd > critStart) ws.mergeCells(R_CAT, critStart, R_CAT, mergeEnd);
       sc(ws, R_CAT, critStart, cat.name, { font: { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } }, fill: color });
-      if (critEnd > critStart) ws.mergeCells(R_CW, critStart, R_CW, critEnd);
+      if (mergeEnd > critStart) ws.mergeCells(R_CW, critStart, R_CW, mergeEnd);
       sc(ws, R_CW, critStart, { formula: "Weights!" + cwRef }, { font: { name: "Arial", size: 8, italic: true, color: { argb: "FF0000FF" } }, fill: "f1f5f9", fmt: "0%" });
 
       if (cat.hasSub) {
         cat.criteria.forEach((crit, j) => {
           const cc = critStart + j;
-          sc(ws, R_CRIT, cc, crit.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc" });
+          sc(ws, R_CRIT, cc, crit.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
           sc(ws, R_CW2, cc, { formula: "Weights!" + critWeightCells[ci + "-" + j] }, { font: { name: "Arial", size: 9, color: { argb: "FF0000FF" } }, fill: "f1f5f9", fmt: "0%" });
           sc(ws, R_EW, cc, { formula: "Weights!E" + (s_w + j) }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
           sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
           ws.getColumn(cc).width = 16;
         });
+        sc(ws, R_CRIT, cscoreCol, cat.name + " Score", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF" + color } }, fill: "f0fdf4", wrap: true });
+        sc(ws, R_CW2, cscoreCol, "", { fill: "f0fdf4" });
+        sc(ws, R_EW, cscoreCol, "", { fill: "f0fdf4" });
+        sc(ws, R_HDR, cscoreCol, "", { fill: "f0fdf4" });
+        ws.getColumn(cscoreCol).width = 14;
       } else {
         const cc = critStart;
-        sc(ws, R_CRIT, cc, cat.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc" });
+        sc(ws, R_CRIT, cc, cat.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
         sc(ws, R_CW2, cc, "", { fill: "f1f5f9" });
         sc(ws, R_EW, cc, { formula: "Weights!E" + s_w }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
         sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -185,11 +192,17 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       const r = R_OPT + opt;
       const optName = (optionNames[opt] && optionNames[opt].trim()) ? optionNames[opt].trim() : "Option " + (opt + 1);
       sc(ws, r, OC, optName, { font: { name: "Arial", size: 10, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "middle" } });
-      catColInfo.forEach(({ critStart, ci }) => {
+      catColInfo.forEach(({ critStart, cscoreCol, ci }) => {
         const cat = processed[ci];
+        const [s_w, e_w] = catRowRanges[ci];
         const numCrit = cat.hasSub ? cat.criteria.length : 1;
         for (let j = 0; j < numCrit; j++) {
           sc(ws, r, critStart + j, null, { font: { name: "Arial", size: 10, color: { argb: "FF0000FF" } }, fill: "eff6ff" });
+        }
+        if (cat.hasSub) {
+          const parts = cat.criteria.map((_, j) => colLetter(critStart + j) + r + "*Weights!" + critWeightCells[ci + "-" + j]);
+          const critWtSum = "SUM(Weights!D" + s_w + ":D" + e_w + ")";
+          sc(ws, r, cscoreCol, { formula: "IFERROR((" + parts.join("+") + ")/" + critWtSum + ",0)" }, { font: { name: "Arial", size: 10, bold: true }, fill: "f0fdf4", fmt: "0.00" });
         }
       });
     }
@@ -224,13 +237,14 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       zCatColInfo.push({ critStart, critEnd: critStart + numCrit - 1, cscoreCol, ci });
     });
 
-    // Input sheet column map (no total/rank, starts at col 2)
+    // Input sheet column map (now has cat score cols too, starts at col 2)
     let iCol = 2;
     const iCatColInfo = [];
     processed.forEach((cat, ci) => {
       const critStart = iCol;
       const numCrit = cat.hasSub ? cat.criteria.length : 1;
       iCol += numCrit;
+      if (cat.hasSub) iCol++; // skip category score column
       iCatColInfo.push({ critStart, ci });
     });
 
@@ -267,7 +281,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       if (cat.hasSub) {
         cat.criteria.forEach((crit, j) => {
           const cc = critStart + j;
-          sc(ws, R_CRIT, cc, crit.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc" });
+          sc(ws, R_CRIT, cc, crit.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
           sc(ws, R_CW2, cc, { formula: "Weights!" + critWeightCells[ci + "-" + j] }, { font: { name: "Arial", size: 9, color: { argb: "FF0000FF" } }, fill: "f1f5f9", fmt: "0%" });
           sc(ws, R_EW, cc, { formula: "Weights!E" + (s_w + j) }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
           sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -280,7 +294,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
         ws.getColumn(cscoreCol).width = 14;
       } else {
         const cc = critStart;
-        sc(ws, R_CRIT, cc, cat.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc" });
+        sc(ws, R_CRIT, cc, cat.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
         sc(ws, R_CW2, cc, "", { fill: "f1f5f9" });
         sc(ws, R_EW, cc, { formula: "Weights!E" + s_w }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
         sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -406,10 +420,58 @@ export async function exportToExcel(categories, modelName, modelDescription, num
     sc(ws, noteRow, 1, "Scores are based on z-score normalised data from the Z-Score Normalisation tab. Options are not auto-sorted; rank column indicates position.", { font: { name: "Arial", size: 8, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
   }
 
+  // ============ DEFINITIONS SHEET ============
+  function buildDefinitionsSheet() {
+    const ws = wb.addWorksheet("Definitions", { properties: { tabColor: { argb: "FF64748b" } } });
+
+    ws.mergeCells("A1:D1");
+    sc(ws, 1, 1, name + " - Criteria Definitions", { font: { name: "Arial", size: 14, bold: true, color: { argb: "FF1a1a2e" } }, align: { horizontal: "left", vertical: "middle" } });
+    let instrRow = 2;
+    if (desc) {
+      sc(ws, 2, 1, desc, { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle" } });
+      instrRow = 3;
+    }
+    sc(ws, instrRow, 1, "Definitions for each criterion used in the model. Edit as needed.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
+
+    const hdrRow = instrRow + 1;
+    const headers = ["Category", "Criterion", "Definition"];
+    headers.forEach((h, i) => sc(ws, hdrRow, i + 1, h, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "64748b" }));
+
+    ws.getColumn(1).width = 22;
+    ws.getColumn(2).width = 26;
+    ws.getColumn(3).width = 60;
+
+    let dr = hdrRow + 1;
+    processed.forEach((cat, ci) => {
+      if (cat.hasSub) {
+        const catStart = dr;
+        cat.criteria.forEach((crit, cri) => {
+          if (cri === 0) {
+            sc(ws, dr, 1, cat.name, { font: { name: "Arial", size: 10, bold: true, color: { argb: "FF1a1a2e" } }, fill: "f1f5f9", align: { horizontal: "left", vertical: "top" } });
+          } else {
+            sc(ws, dr, 1, "", { fill: "f1f5f9" });
+          }
+          sc(ws, dr, 2, crit.name, { font: { name: "Arial", size: 10, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "top" } });
+          sc(ws, dr, 3, crit.description || "", { font: { name: "Arial", size: 10, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "top", wrapText: true } });
+          dr++;
+        });
+        if (cat.criteria.length > 1) {
+          ws.mergeCells(catStart, 1, dr - 1, 1);
+        }
+      } else {
+        sc(ws, dr, 1, cat.name, { font: { name: "Arial", size: 10, bold: true, color: { argb: "FF1a1a2e" } }, fill: "f1f5f9", align: { horizontal: "left", vertical: "top" } });
+        sc(ws, dr, 2, cat.name, { font: { name: "Arial", size: 10, color: { argb: "FF334155" } }, align: { horizontal: "left", vertical: "top" } });
+        sc(ws, dr, 3, (cat.criteria[0] && cat.criteria[0].description) || "", { font: { name: "Arial", size: 10, color: { argb: "FF475569" } }, align: { horizontal: "left", vertical: "top", wrapText: true } });
+        dr++;
+      }
+    });
+  }
+
   // Build all sheets
   buildInputSheet();
   const { TC: zTC, R_OPT: zOptStart } = buildZScoreSheet();
   buildResultsSheet(zTC, zOptStart);
+  buildDefinitionsSheet();
 
   // Generate and download
   const buffer = await wb.xlsx.writeBuffer();
