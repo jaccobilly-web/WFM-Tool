@@ -64,13 +64,30 @@ function WelcomeStep({ onNext }) {
       <div className="text-left bg-white rounded-xl border border-slate-200 p-5 mb-6">
         <h3 className="text-sm font-semibold text-slate-700 mb-3">How it works</h3>
         <div className="space-y-3">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">In this app</p>
           {[
-            { icon: "✏️", title: "Define what matters", desc: "Choose the criteria you'll score each option against, and how important each one is." },
-            { icon: "📊", title: "Score your options", desc: "Enter raw scores in the spreadsheet. The model normalises and weights them automatically." },
-            { icon: "🏆", title: "See the results", desc: "Options are ranked by weighted z-score, removing scale bias between different criteria." },
+            { icon: "1", title: "Name your decision", desc: "What are you trying to choose between?" },
+            { icon: "2", title: "List your options", desc: "The things you're comparing (or just set a number and name them later)." },
+            { icon: "3", title: "Define your criteria and weights", desc: "What factors matter, and how much? Break them into sub-criteria if needed." },
           ].map((item, i) => (
             <div key={i} className="flex gap-3">
-              <span className="text-lg">{item.icon}</span>
+              <span className="w-5 h-5 rounded-full bg-slate-800 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{item.icon}</span>
+              <div>
+                <p className="text-sm font-medium text-slate-700">{item.title}</p>
+                <p className="text-xs text-slate-400">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex justify-center py-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          </div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Export to Google Sheets / Excel</p>
+          {[
+            { icon: "📊", title: "Score each option", desc: "The exported spreadsheet has all your criteria set up. Just fill in your scores (1-10, percentages, whatever scale you like)." },
+            { icon: "🏆", title: "Results appear automatically", desc: "The model normalises scores using z-scores (removing scale bias), applies your weights, and ranks your options." },
+          ].map((item, i) => (
+            <div key={i} className="flex gap-3">
+              <span className="text-lg leading-none mt-0.5">{item.icon}</span>
               <div>
                 <p className="text-sm font-medium text-slate-700">{item.title}</p>
                 <p className="text-xs text-slate-400">{item.desc}</p>
@@ -104,7 +121,7 @@ function NameStep({ modelName, setModelName, modelDescription, setModelDescripti
             className="w-full text-lg font-semibold text-slate-800 bg-white border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200" />
         </div>
         <div>
-          <label className="text-xs font-medium text-slate-500 mb-1.5 block">What decision is this helping you make?</label>
+          <label className="text-xs font-medium text-slate-500 mb-1.5 block">What decision is this helping you make? <span className="text-slate-300 font-normal">(optional)</span></label>
           <textarea value={modelDescription} onChange={e => setModelDescription(e.target.value)}
             placeholder="e.g. Choosing the best next step for my career, comparing across impact, personal fit, and logistics"
             rows={3}
@@ -435,12 +452,24 @@ function BuilderStep({ categories, setCategories, onBack, onExport, allBalanced,
       <div className="flex items-start justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-slate-800 mb-1">Define your criteria</h2>
-          <p className="text-sm text-slate-400">What factors matter for this decision? Set weights to reflect their relative importance.</p>
+          <p className="text-sm text-slate-400">What factors matter for this decision? Name each one, then set its weight to reflect how important it is relative to the others.</p>
         </div>
       </div>
 
-      <div className="mb-4"><WeightSummary categories={categories} /></div>
+      <div className="mb-4">
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Weight balance</p>
+        <p className="text-xs text-slate-400 mb-2">All criteria weights must add up to 100%. This bar shows your progress.</p>
+        <WeightSummary categories={categories} />
+      </div>
 
+      {!hasContent && (
+        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+          <p className="text-sm text-slate-600 font-medium mb-1">Start by naming your first criterion below</p>
+          <p className="text-xs text-slate-400">Give it a name (e.g. "Cost", "Impact", "Personal Fit"), then set how much weight it should carry. Add sub-criteria if you want to break it down further.</p>
+        </div>
+      )}
+
+      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Your criteria</p>
       <div className="space-y-4 mb-4">
         {categories.map((cat, i) => (
           <CriterionCard key={cat.id} criterion={cat} index={i}
@@ -546,7 +575,7 @@ export default function App() {
         {step === 2 && <OptionsStep numOptions={numOptions} setNumOptions={setNumOptions} optionNames={optionNames} setOptionNames={setOptionNames} onBack={() => setStep(1)} onNext={() => setStep(3)} />}
         {step === 3 && <BuilderStep categories={categories} setCategories={setCategories} onBack={() => setStep(2)} onExport={handleExport} allBalanced={allBalanced} hasContent={hasContent} />}
 
-        <div className="mt-12 text-center text-xs text-slate-300">Weighted Factor Model Builder</div>
+        <div className="mt-12 text-center text-xs text-slate-300">Weighted Factor Model Builder &middot; &copy;Jacco Rubens</div>
       </div>
     </div>
   );
