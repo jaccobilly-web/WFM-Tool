@@ -49,7 +49,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
   sc(wsW, wInstrRow, 1, "Edit weights here (blue cells). All other sheets reference this tab.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
 
   const wHdrRow = wInstrRow + 1;
-  const wHeaders = ["Category", "Category Weight", "Criterion", "Criterion Weight", "Effective Weight", "Check"];
+  const wHeaders = ["Criteria", "Criteria Weight", "Sub-criterion", "Sub-criteria Weight", "Effective Weight", "Check"];
   wHeaders.forEach((h, i) => sc(wsW, wHdrRow, i + 1, h, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "10b981" }));
   [22, 16, 26, 16, 18, 30].forEach((w, i) => { wsW.getColumn(i + 1).width = w; });
 
@@ -109,7 +109,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
   sc(wsW, wr, 2, { formula: catSumParts }, { font: { name: "Arial", size: 10, bold: true }, fill: "e2e8f0", fmt: "0%" });
   sc(wsW, wr, 3, "", { fill: "e2e8f0" }); sc(wsW, wr, 4, "", { fill: "e2e8f0" });
   sc(wsW, wr, 5, { formula: "SUM(E" + firstDataRow + ":E" + (wr - 2) + ")" }, { font: { name: "Arial", size: 10, bold: true }, fill: "e2e8f0", fmt: "0.0%" });
-  sc(wsW, wr, 6, { formula: 'IF(ABS(' + catSumParts + '-1)<0.001,"All weights balanced","Category weights sum to "&TEXT(' + catSumParts + ',"0%")&" (need 100%)")' }, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFdc2626" } }, fill: "fefce8" });
+  sc(wsW, wr, 6, { formula: 'IF(ABS(' + catSumParts + '-1)<0.001,"All weights balanced","Criteria weights sum to "&TEXT(' + catSumParts + ',"0%")&" (need 100%)")' }, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFdc2626" } }, fill: "fefce8" });
 
   // Conditional formatting: formula-based for Google Sheets compatibility
   // Apply per-cell rules for each check cell
@@ -191,10 +191,10 @@ export async function exportToExcel(categories, modelName, modelDescription, num
 
     // Label col
     for (let rr = R_CAT; rr <= R_EW; rr++) sc(ws, rr, OC, "", { fill: "f8fafc" });
-    sc(ws, R_CAT, OC, "Category", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
-    sc(ws, R_CW, OC, "Category weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
-    sc(ws, R_CRIT, OC, "Criterion", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle", wrapText: true } });
-    sc(ws, R_CW2, OC, "Criterion weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CAT, OC, "Criteria", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CW, OC, "Criteria weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CRIT, OC, "Sub-criterion", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle", wrapText: true } });
+    sc(ws, R_CW2, OC, "Sub-criteria weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
     sc(ws, R_EW, OC, "Effective weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
     sc(ws, R_HDR, OC, "Option", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "1a1a2e", align: { horizontal: "left", vertical: "middle" } });
     ws.getColumn(OC).width = 20;
@@ -310,10 +310,10 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       sc(ws, rr, OC, "", { fill: "f8fafc" });
       sc(ws, rr, TC, "", { fill: "f8fafc" });
     }
-    sc(ws, R_CAT, RC, "Category", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
-    sc(ws, R_CW, RC, "Category weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
-    sc(ws, R_CRIT, RC, "Criterion", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
-    sc(ws, R_CW2, RC, "Criterion weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CAT, RC, "Criteria", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CW, RC, "Criteria weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CRIT, RC, "Sub-criterion", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
+    sc(ws, R_CW2, RC, "Sub-criteria weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
     sc(ws, R_EW, RC, "Effective weight", { font: { name: "Arial", size: 9, color: { argb: "FF64748b" } }, fill: "f8fafc", align: { horizontal: "right", vertical: "middle" } });
 
     sc(ws, R_HDR, OC, "Option", { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "1a1a2e", align: { horizontal: "left", vertical: "middle" } });
@@ -495,7 +495,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
     sc(ws, instrRow, 1, "Definitions for each criterion used in the model. Edit as needed.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
 
     const hdrRow = instrRow + 1;
-    const headers = ["Category", "Criterion", "Definition", "Source"];
+    const headers = ["Criteria", "Sub-criterion", "Definition", "Source"];
     headers.forEach((h, i) => sc(ws, hdrRow, i + 1, h, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFFFF" } }, fill: "64748b" }));
 
     ws.getColumn(1).width = 22;
