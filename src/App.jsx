@@ -7,8 +7,6 @@ const uid = () => `id_${++_id}_${Date.now()}`;
 const makeCriterion = (name = "") => ({ id: uid(), name, weight: 0, criteria: [], hasSubcriteria: true });
 const makeSubcriterion = (name = "") => ({ id: uid(), name, weight: 0, description: "" });
 
-// ─── Shared components ────────────────────────────────────────
-
 function WeightBar({ value, total, color = "emerald" }) {
   const pct = total > 0 ? Math.min((value / total) * 100, 100) : 0;
   const colors = { emerald: "bg-emerald-500", amber: "bg-amber-500", red: "bg-red-500" };
@@ -29,13 +27,13 @@ function StepDots({ current, total }) {
   );
 }
 
-function NavButtons({ onBack, onNext, nextLabel = "Continue", nextDisabled = false, backLabel = "Back" }) {
+function NavButtons({ onBack, onNext, nextLabel = "Continue", nextDisabled = false }) {
   return (
     <div className="flex items-center justify-between mt-8">
       {onBack ? (
         <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          {backLabel}
+          Back
         </button>
       ) : <div />}
       <button onClick={onNext} disabled={nextDisabled}
@@ -46,8 +44,6 @@ function NavButtons({ onBack, onNext, nextLabel = "Continue", nextDisabled = fal
   );
 }
 
-// ─── Step 0: Welcome ──────────────────────────────────────────
-
 function WelcomeStep({ onNext }) {
   return (
     <div className="max-w-xl mx-auto text-center">
@@ -57,62 +53,53 @@ function WelcomeStep({ onNext }) {
         </div>
         <h1 className="text-2xl font-bold text-slate-800 mb-3">Weighted Factor Model Builder</h1>
         <p className="text-slate-500 text-sm leading-relaxed max-w-md mx-auto">
-          A structured way to compare options and make better decisions. Score each option against weighted criteria, then see the results ranked automatically.
+          A structured way to compare options and make better decisions. Define your criteria here, then score your options in the generated spreadsheet.
         </p>
       </div>
-
       <div className="text-left bg-white rounded-xl border border-slate-200 p-5 mb-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">How it works</h3>
         <div className="space-y-3">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">In this app</p>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Build your model</p>
           {[
-            { icon: "1", title: "Name your decision", desc: "What are you trying to choose between?" },
-            { icon: "2", title: "List your options", desc: "The things you're comparing (or just set a number and name them later)." },
-            { icon: "3", title: "Define your criteria and weights", desc: "What factors matter, and how much? Break them into sub-criteria if needed." },
+            { n: "1", title: "Name your decision", desc: "What are you trying to choose between?" },
+            { n: "2", title: "List your options", desc: "The things you're comparing." },
+            { n: "3", title: "Define your criteria and weights", desc: "What factors matter, and how much?" },
           ].map((item, i) => (
             <div key={i} className="flex gap-3">
-              <span className="w-5 h-5 rounded-full bg-slate-800 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{item.icon}</span>
+              <span className="w-5 h-5 rounded-full bg-slate-800 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{item.n}</span>
               <div>
                 <p className="text-sm font-medium text-slate-700">{item.title}</p>
                 <p className="text-xs text-slate-400">{item.desc}</p>
               </div>
             </div>
           ))}
-          <div className="flex justify-center py-1">
+          <div className="flex justify-center py-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
           </div>
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Export to Google Sheets / Excel</p>
-          {[
-            { icon: "📊", title: "Score each option", desc: "The exported spreadsheet has all your criteria set up. Just fill in your scores (1-10, percentages, whatever scale you like)." },
-            { icon: "🏆", title: "Results appear automatically", desc: "The model normalises scores using z-scores (removing scale bias), applies your weights, and ranks your options." },
-          ].map((item, i) => (
-            <div key={i} className="flex gap-3">
-              <span className="text-lg leading-none mt-0.5">{item.icon}</span>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <div className="flex gap-3">
+              <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
               <div>
-                <p className="text-sm font-medium text-slate-700">{item.title}</p>
-                <p className="text-xs text-slate-400">{item.desc}</p>
+                <p className="text-sm font-semibold text-emerald-800">Export to Google Sheets or Excel</p>
+                <p className="text-xs text-emerald-600 leading-relaxed">The app generates a fully formatted spreadsheet with your criteria, weights, and formulas built in. Score each option in the blue cells and results are calculated automatically using z-score normalisation.</p>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
-
-      <button onClick={onNext}
-        className="px-8 py-3 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 shadow-sm hover:shadow-md transition-all">
+      <button onClick={onNext} className="px-8 py-3 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 shadow-sm hover:shadow-md transition-all">
         Get started
       </button>
     </div>
   );
 }
 
-// ─── Step 1: Name & Purpose ───────────────────────────────────
-
 function NameStep({ modelName, setModelName, modelDescription, setModelDescription, onBack, onNext }) {
   return (
     <div className="max-w-lg mx-auto">
       <h2 className="text-xl font-bold text-slate-800 mb-1">Name your model</h2>
       <p className="text-sm text-slate-400 mb-6">Give it a name and describe what decision you're trying to make.</p>
-
       <div className="space-y-4">
         <div>
           <label className="text-xs font-medium text-slate-500 mb-1.5 block">Model name</label>
@@ -128,98 +115,56 @@ function NameStep({ modelName, setModelName, modelDescription, setModelDescripti
             className="w-full text-sm text-slate-600 bg-white border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200 resize-none" />
         </div>
       </div>
-
       <NavButtons onBack={onBack} onNext={onNext} nextDisabled={!modelName.trim()} />
     </div>
   );
 }
 
-// ─── Step 2: Options ──────────────────────────────────────────
-
 function OptionsStep({ numOptions, setNumOptions, optionNames, setOptionNames, onBack, onNext }) {
-  const [knowOptions, setKnowOptions] = useState(optionNames.some(n => n.trim()) ? "yes" : null);
-
+  const filledCount = optionNames.filter(n => n && n.trim()).length;
+  const handleChange = (i, value) => {
+    const next = [...optionNames];
+    next[i] = value;
+    setOptionNames(next);
+    if (i >= numOptions - 1 && value.trim()) setNumOptions(Math.max(numOptions, i + 2));
+  };
+  const handleRemove = (i) => {
+    const next = [...optionNames]; next.splice(i, 1); setOptionNames(next);
+    setNumOptions(Math.max(2, numOptions - 1));
+  };
+  const displayCount = Math.max(filledCount + 1, 2);
   return (
     <div className="max-w-lg mx-auto">
       <h2 className="text-xl font-bold text-slate-800 mb-1">What are you comparing?</h2>
-      <p className="text-sm text-slate-400 mb-6">You can always add or remove rows in the spreadsheet later.</p>
-
-      {knowOptions === null && (
-        <div className="space-y-3">
-          <button onClick={() => setKnowOptions("yes")}
-            className="w-full text-left p-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
-            <p className="text-sm font-medium text-slate-700">I know my options</p>
-            <p className="text-xs text-slate-400">I can name them now</p>
-          </button>
-          <button onClick={() => setKnowOptions("no")}
-            className="w-full text-left p-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
-            <p className="text-sm font-medium text-slate-700">I'm not sure yet</p>
-            <p className="text-xs text-slate-400">I'll just set a rough number and fill in names later</p>
-          </button>
-        </div>
-      )}
-
-      {knowOptions === "yes" && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-medium text-slate-500">Name your options</label>
-            <button onClick={() => { setOptionNames([...optionNames, ""]); setNumOptions(numOptions + 1); }}
-              className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-              Add another
-            </button>
-          </div>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {Array.from({ length: numOptions }, (_, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-xs text-slate-300 w-6 text-right shrink-0">{i + 1}.</span>
-                <input type="text" value={optionNames[i] || ""} placeholder={`Option ${i + 1}`}
-                  onChange={e => {
-                    const next = [...optionNames];
-                    next[i] = e.target.value;
-                    setOptionNames(next);
-                  }}
-                  className="flex-1 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200" />
-                {numOptions > 2 && (
-                  <button onClick={() => {
-                    const nextNames = [...optionNames]; nextNames.splice(i, 1); setOptionNames(nextNames);
-                    setNumOptions(numOptions - 1);
-                  }} className="text-slate-300 hover:text-red-400 p-1">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {knowOptions === "no" && (
-        <div>
-          <div className="flex items-center gap-4 mb-3">
-            <label className="text-xs font-medium text-slate-500">Roughly how many options?</label>
-            <input type="number" min="2" max="30" value={numOptions}
-              onChange={e => setNumOptions(Math.max(2, Math.min(30, parseInt(e.target.value) || 8)))}
-              className="w-20 text-sm text-center border border-slate-200 rounded-lg px-2 py-2 bg-white focus:outline-none focus:border-slate-400" />
-          </div>
-          <p className="text-xs text-slate-400 italic">Tip: choose more than you think you need. It's easier to delete unused rows than to add new ones.</p>
-        </div>
-      )}
-
-      {knowOptions !== null && (
-        <div className="mt-4">
-          <button onClick={() => setKnowOptions(null)} className="text-xs text-slate-400 hover:text-slate-600 underline decoration-dotted">
-            Change approach
-          </button>
-        </div>
-      )}
-
+      <p className="text-sm text-slate-400 mb-6">Name your options below. A new row appears as you type. You can always add or remove rows in the spreadsheet later.</p>
+      <div className="space-y-2">
+        {Array.from({ length: displayCount }, (_, i) => {
+          const value = optionNames[i] || "";
+          const isFilled = value.trim().length > 0;
+          const isGhost = i === displayCount - 1 && !isFilled;
+          return (
+            <div key={i} className="flex items-center gap-2">
+              <span className={`text-xs w-6 text-right shrink-0 ${isGhost ? "text-slate-200" : "text-slate-400"}`}>{i + 1}.</span>
+              <input type="text" value={value}
+                placeholder={isGhost ? "Add another option..." : `Option ${i + 1}`}
+                onChange={e => handleChange(i, e.target.value)}
+                className={`flex-1 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200 transition-colors ${isGhost ? "bg-slate-50 border border-dashed border-slate-200 text-slate-400 placeholder-slate-300" : "bg-white border border-slate-200 text-slate-700 font-medium"}`} />
+              {isFilled && displayCount > 2 && (
+                <button onClick={() => handleRemove(i)} className="text-slate-300 hover:text-red-400 p-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-xs text-slate-400 mt-3 italic">
+        {filledCount === 0 ? "You can skip naming for now and fill them in the spreadsheet." : `${filledCount} option${filledCount === 1 ? "" : "s"} named.`}
+      </p>
       <NavButtons onBack={onBack} onNext={onNext} />
     </div>
   );
 }
-
-// ─── Step 3: Criteria Builder ─────────────────────────────────
 
 function CriteriaWeightVisual({ criteria }) {
   const total = criteria.reduce((s, c) => s + c.weight, 0);
@@ -270,26 +215,18 @@ function CriterionCard({ criterion, onChange, onRemove, index }) {
   const subTotal = criterion.criteria.reduce((s, c) => s + c.weight, 0);
   const subBalanced = subTotal === 100;
   const subColor = subBalanced ? "emerald" : subTotal > 100 ? "red" : "amber";
-
   const toggleSub = () => {
-    if (criterion.hasSubcriteria) {
-      onChange({ ...criterion, hasSubcriteria: false, criteria: [] });
-    } else {
-      onChange({ ...criterion, hasSubcriteria: true, criteria: [makeSubcriterion("")] });
-    }
+    if (criterion.hasSubcriteria) onChange({ ...criterion, hasSubcriteria: false, criteria: [] });
+    else onChange({ ...criterion, hasSubcriteria: true, criteria: [makeSubcriterion("")] });
   };
-
   const updateSub = (id, updated) => onChange({ ...criterion, criteria: criterion.criteria.map(c => c.id === id ? updated : c) });
   const removeSub = (id) => onChange({ ...criterion, criteria: criterion.criteria.filter(c => c.id !== id) });
   const addSub = () => onChange({ ...criterion, criteria: [...criterion.criteria, makeSubcriterion()] });
   const autoBalance = () => {
-    const count = criterion.criteria.length;
-    if (count === 0) return;
-    const base = Math.floor(100 / count);
-    const remainder = 100 - base * count;
+    const count = criterion.criteria.length; if (count === 0) return;
+    const base = Math.floor(100 / count); const remainder = 100 - base * count;
     onChange({ ...criterion, criteria: criterion.criteria.map((c, i) => ({ ...c, weight: base + (i < remainder ? 1 : 0) })) });
   };
-
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
@@ -311,13 +248,11 @@ function CriterionCard({ criterion, onChange, onRemove, index }) {
         </div>
         <div className="mt-2">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={criterion.hasSubcriteria} onChange={toggleSub}
-              className="rounded border-slate-300 text-slate-600 focus:ring-slate-400" />
+            <input type="checkbox" checked={criterion.hasSubcriteria} onChange={toggleSub} className="rounded border-slate-300 text-slate-600 focus:ring-slate-400" />
             <span className="text-xs text-slate-500">Break down into sub-criteria</span>
           </label>
         </div>
       </div>
-
       {criterion.hasSubcriteria && (
         <div className="px-5 py-3">
           <div className="flex items-center justify-between mb-1">
@@ -331,9 +266,7 @@ function CriterionCard({ criterion, onChange, onRemove, index }) {
           <CriteriaWeightVisual criteria={criterion.criteria} />
           <div className="mt-2 divide-y divide-slate-100">
             {criterion.criteria.map(sub => (
-              <SubcriterionRow key={sub.id} criterion={sub}
-                onChange={updated => updateSub(sub.id, updated)}
-                onRemove={() => removeSub(sub.id)} />
+              <SubcriterionRow key={sub.id} criterion={sub} onChange={updated => updateSub(sub.id, updated)} onRemove={() => removeSub(sub.id)} />
             ))}
           </div>
           <button onClick={addSub} className="mt-3 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1.5">
@@ -342,11 +275,8 @@ function CriterionCard({ criterion, onChange, onRemove, index }) {
           </button>
         </div>
       )}
-
       {!criterion.hasSubcriteria && (
-        <div className="px-5 py-3">
-          <p className="text-xs text-slate-400 italic">No sub-criteria. This will appear as a single scored column in the spreadsheet.</p>
-        </div>
+        <div className="px-5 py-3"><p className="text-xs text-slate-400 italic">No sub-criteria. This will appear as a single scored column in the spreadsheet.</p></div>
       )}
     </div>
   );
@@ -357,7 +287,6 @@ function WeightSummary({ categories }) {
   const balanced = total === 100;
   const color = balanced ? "emerald" : total > 100 ? "red" : "amber";
   const label = balanced ? "Balanced" : total > 100 ? `${total - 100}% over` : `${100 - total}% remaining`;
-
   return (
     <div className={`rounded-xl p-4 border-2 transition-colors ${balanced ? "border-emerald-300 bg-emerald-50" : total > 100 ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"}`}>
       <div className="flex items-center justify-between mb-2">
@@ -370,8 +299,7 @@ function WeightSummary({ categories }) {
       <WeightBar value={total} total={100} color={color} />
       <div className="flex gap-1 mt-3">
         {categories.map(cat => {
-          const pct = cat.weight;
-          const lbl = cat.name || "Untitled";
+          const pct = cat.weight; const lbl = cat.name || "Untitled";
           return pct > 0 ? (
             <div key={cat.id} className="rounded-sm transition-all duration-300 overflow-hidden flex flex-col items-center justify-center py-1"
               style={{ width: `${pct}%`, backgroundColor: balanced ? "#10b981" : total > 100 ? "#ef4444" : "#f59e0b", opacity: 0.6 + (pct / 200), minHeight: "36px" }}>
@@ -402,7 +330,6 @@ function EffectiveWeightPreview({ categories }) {
   });
   allCriteria.sort((a, b) => b.effectiveWeight - a.effectiveWeight);
   const maxWeight = Math.max(...allCriteria.map(c => c.effectiveWeight), 1);
-
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
       <h3 className="text-sm font-semibold text-slate-700 mb-1">Effective Weights</h3>
@@ -431,87 +358,59 @@ function EffectiveWeightPreview({ categories }) {
 
 function BuilderStep({ categories, setCategories, onBack, onExport, allBalanced, hasContent }) {
   const [showPreview, setShowPreview] = useState(true);
-
   const updateCriterion = useCallback((id, updated) => setCategories(cats => cats.map(c => c.id === id ? updated : c)), []);
   const removeCriterion = useCallback((id) => setCategories(cats => cats.filter(c => c.id !== id)), []);
   const addCriterion = useCallback(() => setCategories(cats => [...cats, { ...makeCriterion(""), criteria: [makeSubcriterion("")] }]), []);
-  const autoBalance = useCallback(() => {
+  const autoBalanceAll = useCallback(() => {
     setCategories(cats => {
-      const count = cats.length;
-      if (count === 0) return cats;
-      const base = Math.floor(100 / count);
-      const remainder = 100 - base * count;
+      const count = cats.length; if (count === 0) return cats;
+      const base = Math.floor(100 / count); const remainder = 100 - base * count;
       return cats.map((c, i) => ({ ...c, weight: base + (i < remainder ? 1 : 0) }));
     });
   }, []);
-
   const totalWeight = categories.reduce((s, c) => s + c.weight, 0);
-
   return (
     <div>
       <div className="flex items-start justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-slate-800 mb-1">Define your criteria</h2>
-          <p className="text-sm text-slate-400">What factors matter for this decision? Name each one, then set its weight to reflect how important it is relative to the others.</p>
+          <p className="text-sm text-slate-400">What factors matter for this decision? Set weights to reflect their relative importance.</p>
         </div>
       </div>
-
-      <div className="mb-4">
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Weight balance</p>
-        <p className="text-xs text-slate-400 mb-2">All criteria weights must add up to 100%. This bar shows your progress.</p>
-        <WeightSummary categories={categories} />
-      </div>
-
-      {!hasContent && (
-        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-          <p className="text-sm text-slate-600 font-medium mb-1">Start by naming your first criterion below</p>
-          <p className="text-xs text-slate-400">Give it a name (e.g. "Cost", "Impact", "Personal Fit"), then set how much weight it should carry. Add sub-criteria if you want to break it down further.</p>
-        </div>
-      )}
-
-      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Your criteria</p>
+      <div className="mb-4"><WeightSummary categories={categories} /></div>
       <div className="space-y-4 mb-4">
         {categories.map((cat, i) => (
           <CriterionCard key={cat.id} criterion={cat} index={i}
-            onChange={updated => updateCriterion(cat.id, updated)}
-            onRemove={() => removeCriterion(cat.id)} />
+            onChange={updated => updateCriterion(cat.id, updated)} onRemove={() => removeCriterion(cat.id)} />
         ))}
       </div>
-
       <div className="flex items-center gap-4 mb-8">
         <button onClick={addCriterion}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-sm font-medium text-slate-500 hover:border-slate-400 hover:text-slate-700 transition-colors">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
           Add criterion
         </button>
-        <button onClick={autoBalance} className="text-xs text-slate-500 hover:text-slate-700 underline decoration-dotted">
+        <button onClick={autoBalanceAll} className="text-xs text-slate-500 hover:text-slate-700 underline decoration-dotted">
           Auto-balance equally
         </button>
       </div>
-
       {showPreview && <div className="mb-4"><EffectiveWeightPreview categories={categories} /></div>}
       <div className="flex justify-center mb-6">
         <button onClick={() => setShowPreview(!showPreview)} className="text-xs text-slate-500 hover:text-slate-700 underline decoration-dotted">
           {showPreview ? "Hide" : "Show"} effective weights
         </button>
       </div>
-
       {!allBalanced && hasContent && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
           <p className="font-semibold mb-1">Fix weightings before exporting:</p>
           <ul className="list-disc list-inside space-y-0.5 text-xs">
             {totalWeight !== 100 && <li>Criteria weights sum to {totalWeight}% (need 100%)</li>}
-            {categories.filter(c => {
-              if (!c.hasSubcriteria) return false;
-              const t = c.criteria.reduce((s, cr) => s + cr.weight, 0);
-              return c.criteria.length > 0 && t !== 100;
-            }).map(c => (
-              <li key={c.id}>"{c.name || "Untitled"}" sub-criteria sum to {c.criteria.reduce((s, cr) => s + cr.weight, 0)}% (need 100%)</li>
+            {categories.filter(c => { if (!c.hasSubcriteria) return false; const t = c.criteria.reduce((s, cr) => s + cr.weight, 0); return c.criteria.length > 0 && t !== 100; }).map(c => (
+              <li key={c.id}>&ldquo;{c.name || "Untitled"}&rdquo; sub-criteria sum to {c.criteria.reduce((s, cr) => s + cr.weight, 0)}% (need 100%)</li>
             ))}
           </ul>
         </div>
       )}
-
       <div className="flex items-center justify-between">
         <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -519,28 +418,23 @@ function BuilderStep({ categories, setCategories, onBack, onExport, allBalanced,
         </button>
         <div className="flex items-center gap-3">
           {(!allBalanced || !hasContent) && (
-            <span className="text-xs text-slate-400 italic">
-              {!hasContent ? "Add at least one named criterion" : "Balance all weights to enable export"}
-            </span>
+            <span className="text-xs text-slate-400 italic">{!hasContent ? "Add at least one named criterion" : "Balance all weights to enable export"}</span>
           )}
           <button onClick={onExport} disabled={!allBalanced || !hasContent}
-            className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all shadow-sm ${allBalanced && hasContent ? "bg-slate-800 text-white hover:bg-slate-700 hover:shadow-md" : "bg-slate-200 text-slate-400 cursor-not-allowed"}`}>
-            Export to Excel
+            className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all shadow-sm ${allBalanced && hasContent ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md" : "bg-slate-200 text-slate-400 cursor-not-allowed"}`}>
+            <span className="flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export to Excel
+            </span>
           </button>
         </div>
       </div>
-
-      <p className="text-xs text-slate-400 text-center mt-4">
-        The exported .xlsx works in both Excel and Google Sheets. For Sheets: upload to Drive, then open with Google Sheets.
-      </p>
+      <p className="text-xs text-slate-400 text-center mt-4">The exported .xlsx works in both Excel and Google Sheets. For Sheets: upload to Drive, then open with Google Sheets.</p>
     </div>
   );
 }
 
-// ─── Main App ─────────────────────────────────────────────────
-
 const DEFAULT_CRITERIA = [
-  { ...makeCriterion(""), criteria: [makeSubcriterion("")] },
   { ...makeCriterion(""), criteria: [makeSubcriterion("")] },
   { ...makeCriterion(""), criteria: [makeSubcriterion("")] },
 ];
@@ -549,10 +443,9 @@ export default function App() {
   const [step, setStep] = useState(0);
   const [modelName, setModelName] = useState("");
   const [modelDescription, setModelDescription] = useState("");
-  const [numOptions, setNumOptions] = useState(8);
+  const [numOptions, setNumOptions] = useState(4);
   const [optionNames, setOptionNames] = useState([]);
   const [categories, setCategories] = useState(DEFAULT_CRITERIA);
-
   const totalWeight = categories.reduce((s, c) => s + c.weight, 0);
   const allBalanced = totalWeight === 100 && categories.every(cat => {
     if (!cat.hasSubcriteria) return true;
@@ -560,22 +453,19 @@ export default function App() {
     return t === 100 || cat.criteria.length === 0;
   });
   const hasContent = categories.some(c => c.name.trim());
-
+  const effectiveNumOptions = Math.max(numOptions, optionNames.filter(n => n && n.trim()).length);
   const handleExport = async () => {
-    await exportToExcel(categories, modelName || "Weighted Factor Model", modelDescription, numOptions, optionNames);
+    await exportToExcel(categories, modelName || "Weighted Factor Model", modelDescription, effectiveNumOptions, optionNames);
   };
-
   return (
     <div style={{ minHeight: "100vh" }}>
       <div style={{ maxWidth: step <= 2 ? "640px" : "900px", margin: "0 auto", padding: "40px 16px", transition: "max-width 0.3s" }}>
         {step > 0 && step <= 3 && <StepDots current={step - 1} total={3} />}
-
         {step === 0 && <WelcomeStep onNext={() => setStep(1)} />}
         {step === 1 && <NameStep modelName={modelName} setModelName={setModelName} modelDescription={modelDescription} setModelDescription={setModelDescription} onBack={() => setStep(0)} onNext={() => setStep(2)} />}
         {step === 2 && <OptionsStep numOptions={numOptions} setNumOptions={setNumOptions} optionNames={optionNames} setOptionNames={setOptionNames} onBack={() => setStep(1)} onNext={() => setStep(3)} />}
         {step === 3 && <BuilderStep categories={categories} setCategories={setCategories} onBack={() => setStep(2)} onExport={handleExport} allBalanced={allBalanced} hasContent={hasContent} />}
-
-        <div className="mt-12 text-center text-xs text-slate-300">Weighted Factor Model Builder &middot; &copy;Jacco Rubens</div>
+        <div className="mt-12 text-center text-xs text-slate-300">&copy; Jacco Rubens</div>
       </div>
     </div>
   );
