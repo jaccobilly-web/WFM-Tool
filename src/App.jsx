@@ -121,6 +121,7 @@ function NameStep({ modelName, setModelName, modelDescription, setModelDescripti
 }
 
 function OptionsStep({ numOptions, setNumOptions, optionNames, setOptionNames, onBack, onNext }) {
+  const [knowOptions, setKnowOptions] = useState(optionNames.some(n => n && n.trim()) ? "yes" : null);
   const filledCount = optionNames.filter(n => n && n.trim()).length;
   const handleChange = (i, value) => {
     const next = [...optionNames];
@@ -136,31 +137,71 @@ function OptionsStep({ numOptions, setNumOptions, optionNames, setOptionNames, o
   return (
     <div className="max-w-lg mx-auto">
       <h2 className="text-xl font-bold text-slate-800 mb-1">What are you comparing?</h2>
-      <p className="text-sm text-slate-400 mb-6">Name your options below. A new row appears as you type. You can always add or remove rows in the spreadsheet later.</p>
-      <div className="space-y-2">
-        {Array.from({ length: displayCount }, (_, i) => {
-          const value = optionNames[i] || "";
-          const isFilled = value.trim().length > 0;
-          const isGhost = i === displayCount - 1 && !isFilled;
-          return (
-            <div key={i} className="flex items-center gap-2">
-              <span className={`text-xs w-6 text-right shrink-0 ${isGhost ? "text-slate-200" : "text-slate-400"}`}>{i + 1}.</span>
-              <input type="text" value={value}
-                placeholder={isGhost ? "Add another option..." : `Option ${i + 1}`}
-                onChange={e => handleChange(i, e.target.value)}
-                className={`flex-1 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200 transition-colors ${isGhost ? "bg-slate-50 border border-dashed border-slate-200 text-slate-400 placeholder-slate-300" : "bg-white border border-slate-200 text-slate-700 font-medium"}`} />
-              {isFilled && displayCount > 2 && (
-                <button onClick={() => handleRemove(i)} className="text-slate-300 hover:text-red-400 p-1">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <p className="text-xs text-slate-400 mt-3 italic">
-        {filledCount === 0 ? "You can skip naming for now and fill them in the spreadsheet." : `${filledCount} option${filledCount === 1 ? "" : "s"} named.`}
-      </p>
+      <p className="text-sm text-slate-400 mb-6">You can always add or remove rows in the spreadsheet later.</p>
+
+      {knowOptions === null && (
+        <div className="space-y-3">
+          <button onClick={() => setKnowOptions("yes")}
+            className="w-full text-left p-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
+            <p className="text-sm font-medium text-slate-700">I know my options</p>
+            <p className="text-xs text-slate-400">I can name them now</p>
+          </button>
+          <button onClick={() => setKnowOptions("no")}
+            className="w-full text-left p-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
+            <p className="text-sm font-medium text-slate-700">I'm not sure yet</p>
+            <p className="text-xs text-slate-400">I'll just set a rough number and fill in names later</p>
+          </button>
+        </div>
+      )}
+
+      {knowOptions === "yes" && (
+        <div>
+          <label className="text-xs font-medium text-slate-500 mb-3 block">Name your options. A new row appears as you type.</label>
+          <div className="space-y-2">
+            {Array.from({ length: displayCount }, (_, i) => {
+              const value = optionNames[i] || "";
+              const isFilled = value.trim().length > 0;
+              const isGhost = i === displayCount - 1 && !isFilled;
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <span className={`text-xs w-6 text-right shrink-0 ${isGhost ? "text-slate-200" : "text-slate-400"}`}>{i + 1}.</span>
+                  <input type="text" value={value}
+                    placeholder={isGhost ? "Add another option..." : `Option ${i + 1}`}
+                    onChange={e => handleChange(i, e.target.value)}
+                    className={`flex-1 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-200 transition-colors ${isGhost ? "bg-slate-50 border border-dashed border-slate-200 text-slate-400 placeholder-slate-300" : "bg-white border border-slate-200 text-slate-700 font-medium"}`} />
+                  {isFilled && displayCount > 2 && (
+                    <button onClick={() => handleRemove(i)} className="text-slate-300 hover:text-red-400 p-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-slate-400 mt-3 italic">{filledCount} option{filledCount === 1 ? "" : "s"} named.</p>
+        </div>
+      )}
+
+      {knowOptions === "no" && (
+        <div>
+          <div className="flex items-center gap-4 mb-3">
+            <label className="text-xs font-medium text-slate-500">Roughly how many options?</label>
+            <input type="number" min="2" max="30" value={numOptions}
+              onChange={e => setNumOptions(Math.max(2, Math.min(30, parseInt(e.target.value) || 4)))}
+              className="w-20 text-sm text-center border border-slate-200 rounded-lg px-2 py-2 bg-white focus:outline-none focus:border-slate-400" />
+          </div>
+          <p className="text-xs text-slate-400 italic">Tip: choose more than you think you need. It's easier to delete unused rows than to add new ones.</p>
+        </div>
+      )}
+
+      {knowOptions !== null && (
+        <div className="mt-4">
+          <button onClick={() => setKnowOptions(null)} className="text-xs text-slate-400 hover:text-slate-600 underline decoration-dotted">
+            Change approach
+          </button>
+        </div>
+      )}
+
       <NavButtons onBack={onBack} onNext={onNext} />
     </div>
   );
