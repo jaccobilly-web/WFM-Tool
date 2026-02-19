@@ -453,7 +453,8 @@ export default function App() {
     return t === 100 || cat.criteria.length === 0;
   });
   const hasContent = categories.some(c => c.name.trim());
-  const effectiveNumOptions = Math.max(numOptions, optionNames.filter(n => n && n.trim()).length);
+  const filledOptionCount = optionNames.filter(n => n && n.trim()).length;
+  const effectiveNumOptions = filledOptionCount > 0 ? filledOptionCount : numOptions;
   const handleExport = async () => {
     await exportToExcel(categories, modelName || "Weighted Factor Model", modelDescription, effectiveNumOptions, optionNames);
   };
