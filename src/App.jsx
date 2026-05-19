@@ -4,8 +4,8 @@ import { exportToExcel } from "./export";
 let _id = 0;
 const uid = () => `id_${++_id}_${Date.now()}`;
 
-const makeCriterion = (name = "") => ({ id: uid(), name, weight: 0, criteria: [], hasSubcriteria: true });
-const makeSubcriterion = (name = "") => ({ id: uid(), name, weight: 0, description: "" });
+const makeCriterion = (name = "") => ({ id: uid(), name, weight: 0, criteria: [], hasSubcriteria: true, invert: false });
+const makeSubcriterion = (name = "") => ({ id: uid(), name, weight: 0, description: "", invert: false });
 
 function WeightBar({ value, total, color = "emerald" }) {
   const pct = total > 0 ? Math.min((value / total) * 100, 100) : 0;
@@ -238,6 +238,14 @@ function SubcriterionRow({ criterion, onChange, onRemove }) {
         <input type="text" value={criterion.description} placeholder="Brief description (optional)"
           onChange={e => onChange({ ...criterion, description: e.target.value })}
           className="w-full text-xs text-slate-400 bg-transparent border-0 border-b border-transparent hover:border-slate-200 focus:border-slate-400 focus:outline-none px-0 py-0.5 mt-0.5 transition-colors" />
+        <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
+          <input type="checkbox" checked={!!criterion.invert}
+            onChange={e => onChange({ ...criterion, invert: e.target.checked })}
+            className="rounded border-slate-300 text-amber-500 focus:ring-amber-400 cursor-pointer" style={{ width: "11px", height: "11px" }} />
+          <span className={`text-[10px] transition-colors ${criterion.invert ? "text-amber-600 font-medium" : "text-slate-300"}`}>
+            {criterion.invert ? "Lower = better · enter raw values, score inverted automatically" : "Higher = better · check to invert (e.g. cost, risk)"}
+          </span>
+        </label>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <input type="number" min="0" max="100" value={criterion.weight}
@@ -317,7 +325,17 @@ function CriterionCard({ criterion, onChange, onRemove, index }) {
         </div>
       )}
       {!criterion.hasSubcriteria && (
-        <div className="px-5 py-3"><p className="text-xs text-slate-400 italic">No sub-criteria. This will appear as a single scored column in the spreadsheet.</p></div>
+        <div className="px-5 py-3 space-y-2">
+          <p className="text-xs text-slate-400 italic">No sub-criteria. This will appear as a single scored column in the spreadsheet.</p>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" checked={!!criterion.invert}
+              onChange={e => onChange({ ...criterion, invert: e.target.checked })}
+              className="rounded border-slate-300 text-amber-500 focus:ring-amber-400 cursor-pointer" />
+            <span className={`text-xs transition-colors ${criterion.invert ? "text-amber-600 font-medium" : "text-slate-500"}`}>
+              {criterion.invert ? "Lower = better · enter raw values, score inverted automatically" : "Higher = better · check to invert (e.g. cost, risk)"}
+            </span>
+          </label>
+        </div>
       )}
     </div>
   );
@@ -362,11 +380,11 @@ function EffectiveWeightPreview({ categories }) {
       const critTotal = cat.criteria.reduce((s, c) => s + c.weight, 0);
       cat.criteria.forEach(crit => {
         const ew = critTotal > 0 ? (cat.weight / (totalCatWeight || 100)) * (crit.weight / critTotal) * 100 : 0;
-        allCriteria.push({ criterion: cat.name || "Untitled", name: crit.name || "Untitled", effectiveWeight: Math.round(ew * 10) / 10 });
+        allCriteria.push({ criterion: cat.name || "Untitled", name: (crit.name || "Untitled") + (crit.invert ? " ↓" : ""), effectiveWeight: Math.round(ew * 10) / 10, invert: !!crit.invert });
       });
     } else {
       const ew = totalCatWeight > 0 ? (cat.weight / totalCatWeight) * 100 : 0;
-      allCriteria.push({ criterion: cat.name || "Untitled", name: cat.name || "Untitled", effectiveWeight: Math.round(ew * 10) / 10 });
+      allCriteria.push({ criterion: cat.name || "Untitled", name: (cat.name || "Untitled") + (cat.invert ? " ↓" : ""), effectiveWeight: Math.round(ew * 10) / 10, invert: !!cat.invert });
     }
   });
   allCriteria.sort((a, b) => b.effectiveWeight - a.effectiveWeight);
@@ -393,6 +411,9 @@ function EffectiveWeightPreview({ categories }) {
         ))}
       </div>
       {allCriteria.length === 0 && <p className="text-xs text-slate-400 italic">Add criteria to see effective weights</p>}
+      {allCriteria.some(c => c.invert) && (
+        <p className="text-[10px] text-amber-500 mt-3 pt-3 border-t border-amber-100">↓ lower raw score = better (score will be inverted in the spreadsheet)</p>
+      )}
     </div>
   );
 }

@@ -242,7 +242,11 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       sc(ws, 2, 1, desc, { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle" } });
       instrRow = 3;
     }
-    sc(ws, instrRow, 1, "Enter data in the blue cells. Weights are pulled from the Weights tab.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
+    const hasInverted = processed.some(cat => cat.invert || (cat.criteria && cat.criteria.some(c => c.invert)));
+    const inputInstr = hasInverted
+      ? "Enter raw values in blue cells. ↓ marks criteria where lower scores are better — enter actual values and the model inverts them automatically."
+      : "Enter data in the blue cells. Weights are pulled from the Weights tab.";
+    sc(ws, instrRow, 1, inputInstr, { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
 
     const OC = 1;
     const DC = 2;
@@ -284,7 +288,8 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       if (cat.hasSub) {
         cat.criteria.forEach((crit, j) => {
           const cc = critStart + j;
-          sc(ws, R_CRIT, cc, crit.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
+          const critLabel = crit.name + (crit.invert ? " ↓" : "");
+          sc(ws, R_CRIT, cc, critLabel, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
           sc(ws, R_CW2, cc, { formula: "Weights!" + critWeightCells[ci + "-" + j] }, { font: { name: "Arial", size: 9, color: { argb: "FF0000FF" } }, fill: "f1f5f9", fmt: "0%" });
           sc(ws, R_EW, cc, { formula: "Weights!E" + (s_w + j) }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
           sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -297,7 +302,8 @@ export async function exportToExcel(categories, modelName, modelDescription, num
         ws.getColumn(cscoreCol).width = 14;
       } else {
         const cc = critStart;
-        sc(ws, R_CRIT, cc, cat.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
+        const catLabel = cat.name + (cat.invert ? " ↓" : "");
+        sc(ws, R_CRIT, cc, catLabel, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
         sc(ws, R_CW2, cc, "", { fill: "f1f5f9" });
         sc(ws, R_EW, cc, { formula: "Weights!E" + s_w }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
         sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -324,7 +330,7 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       });
     }
 
-    // Conditional formatting: per-column color scale on data cells (red-yellow-green)
+    // Conditional formatting: per-column color scale on data cells (inverted criteria use reversed colors)
     catColInfo.forEach(({ critStart, ci }) => {
       const cat = processed[ci];
       const numCrit = cat.hasSub ? cat.criteria.length : 1;
@@ -332,7 +338,10 @@ export async function exportToExcel(categories, modelName, modelDescription, num
         const cc = critStart + j;
         const cl = colLetter(cc);
         const ref = cl + R_OPT + ":" + cl + (R_OPT + numOptions - 1);
-        ws.addConditionalFormatting({ ref, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFFECACA" }, { argb: "FFFFFBEB" }, { argb: "FFBBF7D0" }], priority: 1 }] });
+        const isInverted = cat.hasSub ? !!(cat.criteria[j] && cat.criteria[j].invert) : !!cat.invert;
+        const minColor = isInverted ? "FFBBF7D0" : "FFFECACA";
+        const maxColor = isInverted ? "FFFECACA" : "FFBBF7D0";
+        ws.addConditionalFormatting({ ref, rules: [{ type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: minColor }, { argb: "FFFFFBEB" }, { argb: maxColor }], priority: 1 }] });
       }
     });
 
@@ -348,7 +357,11 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       sc(ws, 2, 1, desc, { font: { name: "Arial", size: 10, color: { argb: "FF666666" } }, align: { horizontal: "left", vertical: "middle" } });
       instrRow = 3;
     }
-    sc(ws, instrRow, 1, "Scores standardised per criterion (mean=0, std=1), then weighted.", { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
+    const hasInvertedZ = processed.some(cat => cat.invert || (cat.criteria && cat.criteria.some(c => c.invert)));
+    const zInstr = hasInvertedZ
+      ? "Scores standardised per criterion (mean=0, std=1), then weighted. ↓ criteria are negated so lower raw scores rank higher."
+      : "Scores standardised per criterion (mean=0, std=1), then weighted.";
+    sc(ws, instrRow, 1, zInstr, { font: { name: "Arial", size: 9, italic: true, color: { argb: "FF94a3b8" } }, align: { horizontal: "left", vertical: "middle" } });
 
     const OC = 1, TC = 2, RC = 3, DC = 4;
 
@@ -408,7 +421,8 @@ export async function exportToExcel(categories, modelName, modelDescription, num
       if (cat.hasSub) {
         cat.criteria.forEach((crit, j) => {
           const cc = critStart + j;
-          sc(ws, R_CRIT, cc, crit.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
+          const zCritLabel = crit.name + (crit.invert ? " ↓" : "");
+          sc(ws, R_CRIT, cc, zCritLabel, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
           sc(ws, R_CW2, cc, { formula: "Weights!" + critWeightCells[ci + "-" + j] }, { font: { name: "Arial", size: 9, color: { argb: "FF0000FF" } }, fill: "f1f5f9", fmt: "0%" });
           sc(ws, R_EW, cc, { formula: "Weights!E" + (s_w + j) }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
           sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -421,7 +435,8 @@ export async function exportToExcel(categories, modelName, modelDescription, num
         ws.getColumn(cscoreCol).width = 14;
       } else {
         const cc = critStart;
-        sc(ws, R_CRIT, cc, cat.name, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
+        const zCatLabel = cat.name + (cat.invert ? " ↓" : "");
+        sc(ws, R_CRIT, cc, zCatLabel, { font: { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } }, fill: "f8fafc", align: { horizontal: "center", vertical: "middle", wrapText: true } });
         sc(ws, R_CW2, cc, "", { fill: "f1f5f9" });
         sc(ws, R_EW, cc, { formula: "Weights!E" + s_w }, { font: { name: "Arial", size: 9 }, fill: "f1f5f9", fmt: "0.0%" });
         sc(ws, R_HDR, cc, "", { fill: "e2e8f0" });
@@ -448,7 +463,9 @@ export async function exportToExcel(categories, modelName, modelDescription, num
           const iCl = colLetter(icc);
           const iRange = "'Input'!" + iCl + R_OPT + ":" + iCl + (R_OPT + numOptions - 1);
           const raw = "'Input'!" + iCl + r;
-          sc(ws, r, cc, { formula: "IFERROR((" + raw + "-AVERAGE(" + iRange + "))/STDEV(" + iRange + "),0)" }, { font: { name: "Arial", size: 10 }, fmt: "0.00" });
+          const isInverted = cat.hasSub ? !!(cat.criteria[j] && cat.criteria[j].invert) : !!cat.invert;
+          const sign = isInverted ? "-" : "";
+          sc(ws, r, cc, { formula: "IFERROR(" + sign + "(" + raw + "-AVERAGE(" + iRange + "))/STDEV(" + iRange + "),0)" }, { font: { name: "Arial", size: 10 }, fmt: "0.00" });
         }
 
         if (cat.hasSub) {
